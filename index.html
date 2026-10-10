@@ -8,7 +8,7 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
-<title>Gold Trade Calculator</title>
+<title>Gold & BTC Calculator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
@@ -116,6 +116,11 @@ h1{margin:0;font-size:26px;line-height:1.15;font-weight:700;text-wrap:balance}
 .inp.suffix span{padding:0 12px 0 0}
 .inp.suffix input{padding:11px 4px 11px 12px;text-align:left}
 
+.seg2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.seg2.three{grid-template-columns:repeat(3,1fr)}
+.seg2 button{min-height:42px;border-radius:8px;border:1px solid var(--line);background:var(--field);color:var(--ink);font:600 13px var(--f-body);cursor:pointer;padding:0 8px}
+.seg2 button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+[hidden]{display:none!important}
 .group{display:grid;gap:8px}
 .grow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .grow .inp{width:128px;flex:none}
@@ -198,12 +203,22 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
     <p class="sub">Market price aur entry daalo. Order type, SL, TP aur lot size neeche mil jayega.</p>
   </header>
 
+
   <section class="panel" aria-label="Trade inputs">
-    <div>
-      <span class="lbl">Direction</span>
-      <div class="dir" role="group" aria-label="Direction">
-        <button type="button" data-dir="sell" aria-pressed="true">SELL</button>
-        <button type="button" data-dir="buy" aria-pressed="false">BUY</button>
+    <div class="fields">
+      <div>
+        <span class="lbl">Instrument</span>
+        <div class="seg2" role="group" aria-label="Instrument">
+          <button type="button" data-set="asset" data-v="gold" aria-pressed="true">XAUUSD Gold</button>
+          <button type="button" data-set="asset" data-v="btc" aria-pressed="false">BTCUSD</button>
+        </div>
+      </div>
+      <div>
+        <span class="lbl">Direction</span>
+        <div class="dir" role="group" aria-label="Direction">
+          <button type="button" data-dir="sell" aria-pressed="true">SELL</button>
+          <button type="button" data-dir="buy" aria-pressed="false">BUY</button>
+        </div>
       </div>
     </div>
 
@@ -223,41 +238,85 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
     </div>
 
     <div class="group">
-      <label class="lbl" for="in-sl">SL distance, entry se ($)</label>
-      <div class="grow">
-        <div class="inp"><span>$</span><input id="in-sl" type="number" inputmode="decimal" step="any" autocomplete="off"></div>
-        <div class="chips" role="group" aria-label="SL distance shortcuts">
-          <button type="button" data-chip="sl" data-v="5">5</button>
-          <button type="button" data-chip="sl" data-v="8">8</button>
-          <button type="button" data-chip="sl" data-v="10">10</button>
-          <button type="button" data-chip="sl" data-v="12.5">12.5</button>
-          <button type="button" data-chip="sl" data-v="15">15</button>
+      <span class="lbl">Risk per trade</span>
+      <div class="seg2" role="group" aria-label="Risk mode">
+        <button type="button" data-set="riskMode" data-v="pct" aria-pressed="true">% account ka</button>
+        <button type="button" data-set="riskMode" data-v="cash" aria-pressed="false">Fixed $</button>
+      </div>
+      <div class="grow" data-show="riskMode=pct">
+        <div class="inp suffix"><input id="in-risk" aria-label="Risk percent" type="number" inputmode="decimal" step="any" autocomplete="off"><span>%</span></div>
+        <div class="chips" role="group" aria-label="Risk shortcuts">
+          <button type="button" data-chip="risk" data-v="0.25">0.25</button>
+          <button type="button" data-chip="risk" data-v="0.5">0.5</button>
+          <button type="button" data-chip="risk" data-v="1">1</button>
+          <button type="button" data-chip="risk" data-v="2">2</button>
         </div>
+      </div>
+      <div class="grow" data-show="riskMode=cash">
+        <div class="inp"><span>$</span><input id="in-cash" aria-label="Fixed risk dollars" type="number" inputmode="decimal" step="any" autocomplete="off"></div>
+        <div class="chips" role="group" aria-label="Fixed risk shortcuts">
+          <button type="button" data-chip="cash" data-v="10">10</button>
+          <button type="button" data-chip="cash" data-v="12.5">12.5</button>
+          <button type="button" data-chip="cash" data-v="25">25</button>
+          <button type="button" data-chip="cash" data-v="50">50</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="lbl">Stop loss</span>
+      <div class="seg2" role="group" aria-label="SL mode">
+        <button type="button" data-set="slMode" data-v="dist" aria-pressed="true">Entry se distance</button>
+        <button type="button" data-set="slMode" data-v="price" aria-pressed="false">Exact SL price</button>
+      </div>
+      <div class="grow" data-show="slMode=dist">
+        <div class="inp"><span>$</span><input id="in-sl" aria-label="SL distance" type="number" inputmode="decimal" step="any" autocomplete="off"></div>
+        <div class="chips" id="sl-chips" role="group" aria-label="SL distance shortcuts"></div>
+      </div>
+      <div class="grow" data-show="slMode=price">
+        <div class="inp"><span>$</span><input id="in-slp" aria-label="Exact SL price" type="number" inputmode="decimal" step="any" autocomplete="off"></div>
       </div>
       <p class="hint" id="sl-hint"></p>
     </div>
 
     <div class="group">
-      <label class="lbl" for="in-risk">Risk per trade (account ka %)</label>
-      <div class="grow">
-        <div class="inp suffix"><input id="in-risk" type="number" inputmode="decimal" step="any" autocomplete="off"><span>%</span></div>
-        <div class="chips" role="group" aria-label="Risk shortcuts">
-          <button type="button" data-chip="risk" data-v="0.25">0.25</button>
-          <button type="button" data-chip="risk" data-v="0.5">0.5</button>
-          <button type="button" data-chip="risk" data-v="1">1</button>
-        </div>
+      <span class="lbl">Take profit</span>
+      <div class="seg2 three" role="group" aria-label="TP mode">
+        <button type="button" data-set="tpMode" data-v="rr" aria-pressed="true">Reward : Risk</button>
+        <button type="button" data-set="tpMode" data-v="dist" aria-pressed="false">TP distance</button>
+        <button type="button" data-set="tpMode" data-v="price" aria-pressed="false">Exact TP</button>
       </div>
-    </div>
-
-    <div class="group">
-      <label class="lbl" for="in-rr">Reward : Risk</label>
-      <div class="grow">
-        <div class="inp"><span>1 :</span><input id="in-rr" type="number" inputmode="decimal" step="any" autocomplete="off"></div>
+      <div class="grow" data-show="tpMode=rr">
+        <div class="inp"><span>1 :</span><input id="in-rr" aria-label="Reward multiple" type="number" inputmode="decimal" step="any" autocomplete="off"></div>
         <div class="chips" role="group" aria-label="Reward to risk shortcuts">
           <button type="button" data-chip="rr" data-v="1">1:1</button>
           <button type="button" data-chip="rr" data-v="1.5">1:1.5</button>
           <button type="button" data-chip="rr" data-v="2">1:2</button>
           <button type="button" data-chip="rr" data-v="3">1:3</button>
+          <button type="button" data-chip="rr" data-v="5">1:5</button>
+        </div>
+      </div>
+      <div class="grow" data-show="tpMode=dist">
+        <div class="inp"><span>$</span><input id="in-tpd" aria-label="TP distance" type="number" inputmode="decimal" step="any" autocomplete="off"></div>
+        <div class="chips" id="tp-chips" role="group" aria-label="TP distance shortcuts"></div>
+      </div>
+      <div class="grow" data-show="tpMode=price">
+        <div class="inp"><span>$</span><input id="in-tpp" aria-label="Exact TP price" type="number" inputmode="decimal" step="any" autocomplete="off"></div>
+      </div>
+    </div>
+
+    <div class="fields">
+      <div>
+        <label class="lbl" for="in-contract">Contract size / 1 lot</label>
+        <div class="inp"><input id="in-contract" type="number" inputmode="decimal" step="any" autocomplete="off"></div>
+        <p class="hint" id="contract-hint"></p>
+      </div>
+      <div>
+        <span class="lbl">Lot step</span>
+        <div class="chips" role="group" aria-label="Lot step">
+          <button type="button" data-chip="step" data-v="0.01">0.01</button>
+          <button type="button" data-chip="step" data-v="0.001">0.001</button>
+          <button type="button" data-chip="step" data-v="0.1">0.1</button>
         </div>
       </div>
     </div>
@@ -298,31 +357,36 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
     <p class="warn" id="warn" hidden></p>
 
     <button type="button" class="copy" id="copy">Order values copy karo</button>
-    <p class="note">Calculation 1 lot = 100 oz maan kar hui hai, apne broker ya prop firm ka contract size ek baar check kar lo. Spread aur commission alag lagte hain, SL spread se bada rakho.</p>
+    <p class="note">Calculation upar diye contract size se hui hai (gold = 100 oz/lot), apne broker ya prop firm ka contract size ek baar check kar lo. Spread aur commission alag lagte hain, SL spread se bada rakho.</p>
   </section>
 </main>
+
 
 <script>
 /*CALC*/
 function calcFrom(S){
-  var balance=S.balance, entry=S.entry, risk=S.risk, sl=S.sl, rr=S.rr;
-  if(!(balance>0 && entry>0 && risk>0 && sl>0 && rr>0)) return null;
-  var riskUsd=balance*risk/100;
-  var rawLot=riskUsd/(sl*100);
-  var lot=Math.floor(rawLot*100+1e-9)/100;
-  var belowMin=lot<0.01;
-  if(belowMin) lot=0.01;
-  var actualRisk=lot*sl*100;
-  var tpDist=sl*rr;
-  var reward=lot*tpDist*100;
-  var sell=S.dir==='sell';
+  var sell=S.dir==='sell', entry=S.entry;
+  var sd = S.slMode==='price' ? (sell ? S.slPrice-entry : entry-S.slPrice) : S.sl;
+  var budget = S.riskMode==='cash' ? S.cash : S.balance*S.risk/100;
+  var td = S.tpMode==='price' ? (sell ? entry-S.tpPrice : S.tpPrice-entry)
+         : S.tpMode==='dist' ? S.tpDist : sd*S.rr;
+  if(!(S.balance>0 && entry>0 && budget>0 && S.contract>0 && S.step>0)) return {err:'Entry, balance, risk aur contract size mein 0 se bada number daalo.'};
+  if(!(sd>0)) return {err:S.slMode==='price' ? (sell ? 'Sell mein SL entry se UPAR hona chahiye.' : 'Buy mein SL entry se NEECHE hona chahiye.') : 'SL distance 0 se bada daalo.'};
+  if(!(td>0)) return {err:S.tpMode==='price' ? (sell ? 'Sell mein TP entry se NEECHE hona chahiye.' : 'Buy mein TP entry se UPAR hona chahiye.') : (S.tpMode==='dist' ? 'TP distance 0 se bada daalo.' : 'Reward multiple 0 se bada daalo.')};
+  var rawLot=budget/(sd*S.contract);
+  var lot=Math.floor(rawLot/S.step+1e-9)*S.step;
+  var dec=S.step<0.005?3:(S.step<0.05?2:1);
+  lot=Number(lot.toFixed(dec));
+  var belowMin=lot<S.step-1e-12;
+  if(belowMin) lot=S.step;
+  var actualRisk=lot*sd*S.contract, reward=lot*td*S.contract;
   return {
-    riskUsd:riskUsd, rawLot:rawLot, lot:lot, belowMin:belowMin,
-    actualRisk:actualRisk, actualRiskPct:actualRisk/balance*100,
-    tpDist:tpDist, reward:reward, rewardPct:reward/balance*100,
-    slP: sell ? entry+sl : entry-sl,
-    tpP: sell ? entry-tpDist : entry+tpDist,
-    maxSlForMin: riskUsd/(100*0.01)
+    sd:sd, td:td, rr:td/sd, dec:dec, budget:budget, rawLot:rawLot, lot:lot, belowMin:belowMin,
+    actualRisk:actualRisk, actualRiskPct:actualRisk/S.balance*100,
+    reward:reward, rewardPct:reward/S.balance*100,
+    slP: sell ? entry+sd : entry-sd,
+    tpP: sell ? entry-td : entry+td,
+    maxSlForMin: budget/(S.contract*S.step)
   };
 }
 function orderTypeFrom(S){
@@ -343,21 +407,54 @@ function orderTypeFrom(S){
 /*END*/
 
 (function(){
-  var KEY='goldcalc.v1';
-  var S={dir:'sell',market:4194,entry:4192,balance:5000,risk:0.25,sl:10,rr:2,trades:2};
+  var KEY='goldcalc.v2';
+  var ASSETS={
+    gold:{name:'XAUUSD', title:'Gold Trade Calculator', eyebrow:'XAUUSD · 1 lot = 100 oz', contract:100,
+      d:{market:4194,entry:4192,sl:10,tpDist:20,slPrice:4202,tpPrice:4172},
+      slChips:[5,8,10,12.5,15], tpChips:[10,15,20,30],
+      hint:'Gold: 1 lot = 100 oz, $1 move = $100 per lot. Apne platform ka spec check kar lo.'},
+    btc:{name:'BTCUSD', title:'Bitcoin Trade Calculator', eyebrow:'BTCUSD · contract size platform se check karo', contract:1,
+      d:{market:62000,entry:62000,sl:500,tpDist:1000,slPrice:62500,tpPrice:61000},
+      slChips:[200,300,500,1000], tpChips:[400,600,1000,1500],
+      hint:'BTC CFD ka contract size platform pe alag hota hai (1, 0.1 etc). Terminal ke Symbol Specification se exact value yahan daalo, warna lot galat aayega.'}
+  };
+  var S={asset:'gold',dir:'sell',market:4194,entry:4192,balance:5000,riskMode:'pct',risk:0.25,cash:12.5,
+    slMode:'dist',sl:10,slPrice:4202,tpMode:'rr',rr:2,tpDist:20,tpPrice:4172,contract:100,step:0.01,trades:2};
+  var NUM=['market','entry','balance','risk','cash','sl','slPrice','rr','tpDist','tpPrice','contract','step','trades'];
   try{
     var saved=JSON.parse(localStorage.getItem(KEY)||'null');
     if(saved && typeof saved==='object'){
-      ['balance','risk','sl','rr','trades'].forEach(function(k){ if(typeof saved[k]==='number' && isFinite(saved[k]) && saved[k]>0) S[k]=saved[k]; });
+      NUM.forEach(function(k){ if(typeof saved[k]==='number' && isFinite(saved[k]) && saved[k]>0) S[k]=saved[k]; });
+      if(saved.asset==='gold'||saved.asset==='btc') S.asset=saved.asset;
       if(saved.dir==='buy'||saved.dir==='sell') S.dir=saved.dir;
+      if(saved.riskMode==='pct'||saved.riskMode==='cash') S.riskMode=saved.riskMode;
+      if(saved.slMode==='dist'||saved.slMode==='price') S.slMode=saved.slMode;
+      if(saved.tpMode==='rr'||saved.tpMode==='dist'||saved.tpMode==='price') S.tpMode=saved.tpMode;
     }
   }catch(e){}
 
   function $(id){return document.getElementById(id)}
-  var inputs={market:$('in-market'),entry:$('in-entry'),balance:$('in-balance'),sl:$('in-sl'),risk:$('in-risk'),rr:$('in-rr')};
+  var inputs={market:$('in-market'),entry:$('in-entry'),balance:$('in-balance'),sl:$('in-sl'),slPrice:$('in-slp'),
+    risk:$('in-risk'),cash:$('in-cash'),rr:$('in-rr'),tpDist:$('in-tpd'),tpPrice:$('in-tpp'),contract:$('in-contract')};
   function money(x){return '$'+x.toFixed(2)}
   function p2(x){return x.toFixed(2)}
   function pct(x){return (x<0.1?x.toFixed(3):x.toFixed(2))+'%'}
+
+  function buildChips(){
+    var A=ASSETS[S.asset];
+    [['sl-chips','sl',A.slChips],['tp-chips','tpDist',A.tpChips]].forEach(function(g){
+      $(g[0]).innerHTML=g[2].map(function(v){return '<button type="button" data-chip="'+g[1]+'" data-v="'+v+'">'+v+'</button>'}).join('');
+    });
+    bindChips($('sl-chips')); bindChips($('tp-chips'));
+  }
+  function setAsset(a,keep){
+    S.asset=a; var A=ASSETS[a];
+    if(!keep){ ['market','entry','sl','tpDist','slPrice','tpPrice'].forEach(function(k){S[k]=A.d[k]}); S.contract=A.contract; }
+    buildChips(); syncInputs();
+  }
+  function syncInputs(){
+    Object.keys(inputs).forEach(function(k){ inputs[k].value = isFinite(S[k]) ? S[k] : ''; });
+  }
 
   function ladderHTML(c){
     var H=268, LH=17;
@@ -385,9 +482,18 @@ function orderTypeFrom(S){
 
   var lastCopy='';
   function render(){
-    var c=calcFrom(S), ot=orderTypeFrom(S), sell=S.dir==='sell';
+    var A=ASSETS[S.asset], c=calcFrom(S), ot=orderTypeFrom(S);
+
+    document.title=A.title;
+    document.querySelector('h1').textContent=A.title;
+    document.querySelector('.eyebrow').textContent=A.eyebrow;
+    $('contract-hint').textContent=A.hint;
 
     document.querySelectorAll('[data-dir]').forEach(function(b){ b.setAttribute('aria-pressed',String(b.dataset.dir===S.dir)); });
+    document.querySelectorAll('[data-set]').forEach(function(b){ b.setAttribute('aria-pressed',String(String(S[b.dataset.set])===b.dataset.v)); });
+    document.querySelectorAll('[data-show]').forEach(function(el){
+      var p=el.dataset.show.split('='); el.hidden = String(S[p[0]])!==p[1];
+    });
     document.querySelectorAll('[data-chip]').forEach(function(b){
       b.setAttribute('aria-pressed',String(Math.abs((S[b.dataset.chip]||0)-parseFloat(b.dataset.v))<1e-9));
     });
@@ -397,18 +503,17 @@ function orderTypeFrom(S){
     $('ot-name').textContent=ot.name;
     $('ot-why').textContent=ot.why;
 
-    var rid=S.balance>0&&S.risk>0 ? S.balance*S.risk/100 : NaN;
-    $('sl-hint').textContent = isFinite(rid)
-      ? S.risk+'% risk par 0.01 lot ke saath SL '+money(rid)+' tak chal sakta hai. Usse bada SL ho to lot 0.01 se neeche jana padega.'
+    var rid = S.riskMode==='cash' ? S.cash : (S.balance>0&&S.risk>0 ? S.balance*S.risk/100 : NaN);
+    $('sl-hint').textContent = (isFinite(rid)&&S.contract>0&&S.step>0)
+      ? 'Risk budget '+money(rid)+'. '+S.step+' lot par SL '+money(rid/(S.contract*S.step))+' tak chal sakta hai. Usse bada SL ho to lot minimum se neeche jana padega.'
       : '';
 
     var warn=$('warn'), msgs=[];
-    if(!c){
+    if(c.err){
       ['o-entry','o-sl','o-tp','o-lot','s-risk','s-reward','s-total'].forEach(function(id){$(id).textContent='—'});
       ['o-entry-s','o-sl-s','o-tp-s','o-lot-s','s-risk-s','s-reward-s','s-total-s'].forEach(function(id){$(id).textContent=''});
       $('ladder').innerHTML='';
-      msgs.push('Entry, balance, SL, risk aur reward sab mein 0 se bada number daalo.');
-      warn.textContent=msgs.join(' '); warn.hidden=false;
+      warn.textContent=c.err; warn.hidden=false;
       lastCopy='';
       return;
     }
@@ -416,13 +521,13 @@ function orderTypeFrom(S){
     $('o-entry').textContent=p2(S.entry);
     $('o-entry-s').textContent=ot.kind==='none'?'':ot.name;
     $('o-sl').textContent=p2(c.slP);
-    $('o-sl-s').textContent=p2(S.sl)+' $ door, loss '+money(c.actualRisk);
+    $('o-sl-s').textContent=p2(c.sd)+' $ door, loss '+money(c.actualRisk);
     $('o-tp').textContent=p2(c.tpP);
-    $('o-tp-s').textContent=p2(c.tpDist)+' $ door, profit '+money(c.reward);
-    $('o-lot').textContent=c.lot.toFixed(2);
+    $('o-tp-s').textContent=p2(c.td)+' $ door · 1:'+c.rr.toFixed(2)+' · profit '+money(c.reward);
+    $('o-lot').textContent=c.lot.toFixed(c.dec);
     $('o-lot-s').textContent = c.belowMin
-      ? 'Math: '+c.rawLot.toFixed(4)+', minimum 0.01 lagana pada'
-      : 'Math: '+c.rawLot.toFixed(4)+', 0.01 step mein neeche round';
+      ? 'Math: '+c.rawLot.toFixed(4)+', minimum '+S.step+' lagana pada'
+      : 'Math: '+c.rawLot.toFixed(4)+', '+S.step+' step mein neeche round';
 
     $('s-risk').textContent=money(c.actualRisk);
     $('s-risk-s').textContent=pct(c.actualRiskPct)+' account ka';
@@ -436,26 +541,39 @@ function orderTypeFrom(S){
     $('ladder').innerHTML=ladderHTML(c);
 
     if(c.belowMin){
-      msgs.push('Is SL par sabse chhota lot 0.01 bhi '+money(c.actualRisk)+' ('+pct(c.actualRiskPct)+') ka risk deta hai, jabki target '+money(c.riskUsd)+' tha. Target risk mein rehna hai to SL '+money(c.maxSlForMin)+' ya usse chhota rakho.');
+      msgs.push('Is SL par sabse chhota lot '+S.step+' bhi '+money(c.actualRisk)+' ('+pct(c.actualRiskPct)+') ka risk deta hai, jabki target '+money(c.budget)+' tha. Target risk mein rehna hai to SL '+money(c.maxSlForMin)+' ya usse chhota rakho.');
     }
     if(c.actualRiskPct>1) msgs.push('Ek trade ka risk 1% se upar hai.');
+    if(S.asset==='btc') msgs.push('BTC: contract size '+S.contract+' maana gaya hai. Platform ke Symbol Specification se verify karo, warna lot galat hoga.');
     if(msgs.length){ warn.textContent=msgs.join(' '); warn.hidden=false; } else { warn.hidden=true; warn.textContent=''; }
 
-    lastCopy = 'XAUUSD '+ot.name.toUpperCase()+'\n'
+    lastCopy = A.name+' '+ot.name.toUpperCase()+'\n'
       +'Entry: '+p2(S.entry)+'\n'
       +'SL: '+p2(c.slP)+'\n'
       +'TP: '+p2(c.tpP)+'\n'
-      +'Lot: '+c.lot.toFixed(2)+'\n'
+      +'Lot: '+c.lot.toFixed(c.dec)+'\n'
       +'Risk: '+money(c.actualRisk)+' ('+pct(c.actualRiskPct)+')\n'
-      +'Reward: '+money(c.reward);
+      +'Reward: '+money(c.reward)+' (1:'+c.rr.toFixed(2)+')';
   }
 
   function persist(){
-    try{ localStorage.setItem(KEY,JSON.stringify({dir:S.dir,balance:S.balance,risk:S.risk,sl:S.sl,rr:S.rr,trades:S.trades})); }catch(e){}
+    var o={asset:S.asset,dir:S.dir,riskMode:S.riskMode,slMode:S.slMode,tpMode:S.tpMode};
+    NUM.forEach(function(k){o[k]=S[k]});
+    try{ localStorage.setItem(KEY,JSON.stringify(o)); }catch(e){}
+  }
+
+  function bindChips(root){
+    root.querySelectorAll('[data-chip]').forEach(function(b){
+      b.onclick=function(){
+        var k=b.dataset.chip, v=parseFloat(b.dataset.v);
+        S[k]=v;
+        if(inputs[k]) inputs[k].value=v;
+        render(); persist();
+      };
+    });
   }
 
   Object.keys(inputs).forEach(function(k){
-    inputs[k].value = isFinite(S[k]) ? S[k] : '';
     inputs[k].addEventListener('input',function(){
       var v=parseFloat(inputs[k].value);
       S[k]=isFinite(v)?v:NaN;
@@ -465,14 +583,15 @@ function orderTypeFrom(S){
   document.querySelectorAll('[data-dir]').forEach(function(b){
     b.addEventListener('click',function(){ S.dir=b.dataset.dir; render(); persist(); });
   });
-  document.querySelectorAll('[data-chip]').forEach(function(b){
+  document.querySelectorAll('[data-set]').forEach(function(b){
     b.addEventListener('click',function(){
-      var k=b.dataset.chip, v=parseFloat(b.dataset.v);
-      S[k]=v;
-      if(inputs[k]) inputs[k].value=v;
+      var k=b.dataset.set, v=b.dataset.v;
+      if(k==='asset'){ if(v!==S.asset) setAsset(v,false); }
+      else S[k]=v;
       render(); persist();
     });
   });
+  bindChips(document);
 
   var copyBtn=$('copy'), copyTimer=null;
   function flash(t){
@@ -501,6 +620,7 @@ function orderTypeFrom(S){
     }
   });
 
+  setAsset(S.asset,true);
   render();
 })();
 </script>

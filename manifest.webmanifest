@@ -1,7 +1,7 @@
 {
-  "name": "Gold Trade Calculator",
-  "short_name": "Gold Calc",
-  "description": "XAUUSD order type, SL, TP aur lot size calculator",
+  "name": "Gold & BTC Trade Calculator",
+  "short_name": "Trade Calc",
+  "description": "XAUUSD and BTCUSD order type, SL, TP and lot size calculator",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
